@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3 uid="uid://duohg5485g3bb"]
+
+[ext_resource type="Script" path="res://addons/gdscript-interfaces/bottom_panel_tab.gd" id="1_uy7i6"]
+
+[node name="HBoxContainer" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_uy7i6")
+
+[node name="Scripts" type="ItemList" parent="."]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+max_text_lines = 2
+
+[node name="List" type="ItemList" parent="."]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+max_text_lines = 2
+
+[node name="Timer" type="Timer" parent="List"]
+wait_time = 0.1
+one_shot = true
+
+[node name="Description" type="RichTextLabel" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+bbcode_enabled = true
+text = "Simple description of an error in script: In declaration of method [color=PINK][b]set_param1()[/b][/color] return type is not specified."
+
+[connection signal="item_clicked" from="Scripts" to="." method="_on_scripts_item_clicked"]
+[connection signal="item_selected" from="Scripts" to="." method="_on_scripts_item_selected"]
+[connection signal="item_activated" from="List" to="." method="_on_list_item_activated"]
+[connection signal="item_clicked" from="List" to="." method="_on_list_item_clicked"]
+[connection signal="item_selected" from="List" to="." method="_on_list_item_selected"]
+[connection signal="timeout" from="List/Timer" to="." method="_on_timer_timeout"]

@@ -5,6 +5,8 @@ var curent_script: Script
 var interfaces = {}
 const GLOBAL_NAME = "InterfacesAutoload"
 var GLOBAL : Interfaces
+var BOTTOM_PANEL_TAB : Control
+var BOTTOM_PANEL_BUTTON : Button
 
 func _enter_tree() -> void:
 	GLOBAL = Interfaces.new()
@@ -13,10 +15,21 @@ func _enter_tree() -> void:
 	SE.editor_script_changed.connect(_on_script_changed)
 	SE.script_close.connect(_on_script_close)
 	add_autoload_singleton(GLOBAL_NAME,"res://addons/gdscript-interfaces/global.gd")
+	BOTTOM_PANEL_TAB = preload("res://addons/gdscript-interfaces/bottom_panel_tab.tscn").instantiate()
+	BOTTOM_PANEL_BUTTON = add_control_to_bottom_panel(BOTTOM_PANEL_TAB,"Interfaces")
+	BOTTOM_PANEL_TAB.Editor_Interface = get_editor_interface()
 
 func _ready() -> void:
 	for path in GLOBAL.paths.values():
 		load_interface_from_path(path)
+	var timer := Timer.new()
+	timer.autostart = true
+	timer.wait_time = 2
+	timer.timeout.connect(_update_current)
+	add_child(timer)
+
+func _update_current() -> void:
+	read_script(curent_script)
 
 func load_interface_from_path(path) -> Error:
 #	print("try to load ",path)
@@ -39,7 +52,8 @@ func _on_script_changed(p_s:Script):
 func read_script(p_s:Script):
 	if not p_s or p_s == get_script():
 		return
-	print(p_s)
+	#print(p_s)
+	BOTTOM_PANEL_TAB.remove_errors_generated_by_script(p_s)
 	var inst = null
 	if not p_s.reload(true) and p_s.has_method("new"):
 		inst = p_s.new()
@@ -181,8 +195,11 @@ func build_script(p_s:Script):
 	build_from_path(p_s.resource_path)
 
 func show_error(p_script:Script,p_message:String):
-	printerr(p_script.resource_path+" - "+p_message)
+	BOTTOM_PANEL_TAB.add_error(p_message,p_script)
+	#printerr(p_script.resource_path+" - "+p_message)
 
 func _exit_tree() -> void:
 	# Clean-up of the plugin goes here.
 	remove_autoload_singleton(GLOBAL_NAME)
+	remove_control_from_bottom_panel(BOTTOM_PANEL_TAB)
+	BOTTOM_PANEL_TAB.free()

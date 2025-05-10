@@ -8,7 +8,7 @@ var alfa : String
 var beta : Vector2
 var gamma : int
 var delta := ""
-var epsilon : A
+#var epsilon : A
 var binary     :	   I2.Enum
 
 # Called when the node enters the scene tree for the first time.

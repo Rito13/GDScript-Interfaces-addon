@@ -19,7 +19,7 @@ script/source = "extends Node
 
 const IMPLEMENTS = [preload(\"res://inter5.gd\")]
 
-var resource_path := \"test1.tscn\"
+#var resource_path := \"test1.tscn\"
 
 func _ready() -> void:
 	print(\"Interfaces:I, I2, I4\")

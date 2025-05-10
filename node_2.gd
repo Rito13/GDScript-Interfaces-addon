@@ -1,2 +1,2 @@
 extends Node
-const IMPLEMENTS = ["BinI"]
+const IMPLEMENTS = ["I"]
