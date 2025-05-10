@@ -1,10 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://0jeuqgvj2bk0"]
+[gd_scene load_steps=5 format=3 uid="uid://0jeuqgvj2bk0"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_e41ey"]
+[ext_resource type="Script" path="res://node_2.gd" id="2_q2wwt"]
 
 [sub_resource type="GDScript" id="GDScript_hsnl1"]
 script/source = "extends Node
-var n
+var n:I4 # Test of buildin script
 
 func foo() -> Vector2:
 	return Vector2(1,2)
@@ -13,8 +14,25 @@ func bar(a:String,b:NodePath):
 	pass
 "
 
+[sub_resource type="GDScript" id="GDScript_ijysv"]
+script/source = "extends Node
+
+const IMPLEMENTS = [preload(\"res://inter5.gd\")]
+
+var resource_path := \"test1.tscn\"
+
+func _ready() -> void:
+	print(\"Interfaces:I, I2, I4\")
+"
+
 [node name="Node" type="Node"]
 script = ExtResource("1_e41ey")
 
 [node name="Node" type="Node" parent="."]
 script = SubResource("GDScript_hsnl1")
+
+[node name="Node2" type="Node" parent="."]
+script = ExtResource("2_q2wwt")
+
+[node name="Node3" type="Node" parent="."]
+script = SubResource("GDScript_ijysv")

@@ -14,3 +14,4 @@ func _ready() -> void:
 	use(Interfaces.as_interface(a))
 	#test = Interfaces.an_enumeration.MINUS_TWO
 	print(Interfaces.implements(a,"I2"))
+	print("Main  , J, K, L")
