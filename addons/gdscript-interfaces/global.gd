@@ -2,13 +2,6 @@
 extends Node
 class_name Interfaces
 
-enum an_enumeration {
-	ZERO,
-	ONE,
-	TWO,
-	MINUS_ONE = -1,
-	MINUS_TWO = -2
-}
 const NOT_IMPLEMENT = "does_not_implement_interfaces"
 static var inherits = {}
 static var paths = {}
@@ -85,7 +78,7 @@ static func implements(who:Object,what:StringName) -> bool:
 				return true
 	return false
 
-static func as_interface(who:Object,interface:StringName=&""):
+static func as_interface(who:Object,interface:StringName=&"") -> Object:
 	if interface:
 		assert(implements(who,interface))
 	return who

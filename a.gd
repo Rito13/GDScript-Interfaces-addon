@@ -6,10 +6,14 @@ signal sig_1
 
 var alfa : String
 var beta : Vector2
-var gamma : int
+var gamma : int = NAN
 var delta := ""
-#var epsilon : A
+@onready var epsilon : A = $"."
 var binary     :	   I2.Enum
+
+# class can have more properties
+var custom_name = "B"
+var child_position := Vector2(100,10)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
