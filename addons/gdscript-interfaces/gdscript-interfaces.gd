@@ -8,6 +8,26 @@ var GLOBAL : Interfaces
 var BOTTOM_PANEL_TAB : Control
 var BOTTOM_PANEL_BUTTON : Button
 
+# Messages
+## [Interface]
+const UNKNOWN_INTERFACE = "Unknown interface [b]%s[/b]."
+## [Interface,signal]
+const LACK_OF_SIGNAL = "Implementation of [b]%s[/b] interface lacks declaration of [color={color}][i]%s[/i][/color] signal."
+## [Interface,property]
+const LACK_OF_PROPERTY = "Implementation of [b]%s[/b] interface lacks declaration of [color={color}][u]%s[/u][/color] property."
+## [Interface,method]
+const LACK_OF_METHOD = "Implementation of [b]%s[/b] interface lacks declaration of [color={color}]%s()[/color] method."
+## [property,Interface,expected_type]
+const INVALID_PROPERTY_TYPE = "Type of [color={color}][u]%s[/u][/color] does not match type specified in [b]%s[/b] interface. It should be a(n) [color={color}][b]%s[/b][/color]."
+## [method,Interface,expected_value]
+const METHOD_NEED_MORE_ARGS = "Method [color={color}]%s()[/color] has less arguments than specified in [b]%s[/b] interface. It should have at least %d."
+## [argument,method,Interface]
+const ARGUMENT_EXCESSIVE_TYPE = "Argument [color={color}][u]%s[/u][/color] of [color={color}]%s()[/color] method has excessively defined type. Interface [b]%s[/b] requires this method to support any type."
+## [curent_type,argument,method,expected_type,Interface]
+const INVALID_ARGUMENT_TYPE = "Type [color={color}][b]%s[/b][/color] of [color={color}][u]%s[/u][/color] in [color={color}]%s()[/color] method does not match [color={color}][b]%s[/b][/color] type specified in [b]%s[/b] interface."
+## [Interface,method,return_type]
+const INVALID_RETURN_TYPE = "Interface [b]%s[/b] requires [color={color}]%s()[/color] method to return [color={color}][b]%s[/b][/color]."
+
 func _enter_tree() -> void:
 	GLOBAL = Interfaces.new()
 	add_child(GLOBAL)
@@ -95,16 +115,16 @@ func read_script(p_s:Script):
 						i_name = i_name.get_global_name()
 				if not interfaces.has(i_name):
 					if load_interface_from_path(i_name) != OK:
-						show_error(p_s,"Unknown interface '"+i_name+"'.")
+						show_error(p_s,UNKNOWN_INTERFACE % [i_name])
 						continue
 				var spec = interfaces[i_name]
 				for sig in spec.signals:
 					if inst.has_signal(sig):
 						continue
-					show_error(p_s,"Implementation of "+i_name+" interface lacks declaration of "+sig+" signal.")
+					show_error(p_s,LACK_OF_SIGNAL % [i_name,sig])
 				for key in spec.variables.keys():
 					if not variables.has(key):
-						show_error(p_s,"Implementation of "+i_name+" interface lacks declaration of "+key+" property.")
+						show_error(p_s,LACK_OF_PROPERTY % [i_name,key])
 						continue
 					var type = spec.variables[key]["type"]
 					if type == TYPE_NIL:
@@ -116,16 +136,15 @@ func read_script(p_s:Script):
 							continue
 					elif type == variables[key]["type"]:
 						continue
-					show_error(p_s,"Type of "+key+" does not match type specified in "+i_name+" interface. "+
-						"It should be a(n) "+type_string+".")
+					show_error(p_s,INVALID_PROPERTY_TYPE % [key,i_name,type_string])
 				for key in spec.methods.keys():
 					if not methods.has(key):
-						show_error(p_s,"Implementation of "+i_name+" interface lacks declaration of "+key+"() method.")
+						show_error(p_s,LACK_OF_METHOD % [i_name,key])
 						continue
 					var args = methods[key]["args"]
 					var iargs = spec.methods[key]["args"]
 					if len(args) < len(iargs):
-						show_error(p_s,"Method "+key+"() has less arguments than specified in "+i_name+" interface. It should have at least "+str(len(iargs))+".")
+						show_error(p_s,METHOD_NEED_MORE_ARGS % [key,i_name,len(iargs)])
 						continue
 					for i in range(len(iargs)):
 						var type = args[i]["type"]
@@ -133,17 +152,18 @@ func read_script(p_s:Script):
 						if type == TYPE_NIL:
 							continue
 						if itype == TYPE_NIL:
-							show_error(p_s,"Argument "+args[i]["name"]+" of "+key+"() method has excessively defined type. "+
-								"Interface "+i_name+" requires this method to support any type.")
+							show_error(p_s,ARGUMENT_EXCESSIVE_TYPE % [args[i]["name"],key,i_name])
 							continue
 						if itype == TYPE_OBJECT:
 							if args[i]["class_name"] == iargs[i]["class_name"]:
 								continue
-							show_error(p_s,"Type of "+args[i]["name"]+" argument of "+key+"() method does not match type specified in "+i_name+" interface. "+
-								"It should be a(n) "+iargs[i]["class_name"]+".")
+							var c_type = args[i]["class_name"]
+							if c_type == "":
+								c_type = type_string(type)
+							show_error(p_s,INVALID_ARGUMENT_TYPE % [c_type,args[i]["name"],key,iargs[i]["class_name"],i_name])
 							continue
 						if itype != type:
-							show_error(p_s,"Type "+type_string(type)+" of "+args[i]["name"]+" in "+key+" method does not match "+type_string(itype)+" type specified in "+i_name+" interface.")
+							show_error(p_s,INVALID_ARGUMENT_TYPE % [type_string(type),args[i]["name"],key,type_string(itype),i_name])
 					var ret = methods[key]["return"]
 					var iret = spec.methods[key]["return"]
 					if iret["type"] == TYPE_NIL:
@@ -156,7 +176,7 @@ func read_script(p_s:Script):
 							continue
 					elif ret["type"] == iret["type"]:
 						continue
-					show_error(p_s,"Interface "+i_name+" requires "+key+"() method to return "+required_type+".")
+					show_error(p_s,INVALID_RETURN_TYPE % [i_name,key,required_type])
 #	inst.free()
 
 func _build() -> bool :
@@ -195,6 +215,9 @@ func build_script(p_s:Script):
 	build_from_path(p_s.resource_path)
 
 func show_error(p_script:Script,p_message:String):
+	var ES = get_editor_interface().get_editor_settings()
+	var c :Color = ES.get_setting("interface/theme/accent_color")
+	p_message = p_message.format({"color":"#"+c.to_html(false)})
 	BOTTOM_PANEL_TAB.add_error(p_message,p_script)
 	#printerr(p_script.resource_path+" - "+p_message)
 

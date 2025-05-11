@@ -13,7 +13,7 @@ var scripts : Array[Script] = []
 var indexes : Dictionary = {}
 var errors : Array[ErrorArray] = []
 var Editor_Interface : EditorInterface
-var selected_script : int = 0
+var selected_script : int = -1
 
 func _ready() -> void:
 	$List.clear()

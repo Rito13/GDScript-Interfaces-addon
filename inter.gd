@@ -1,6 +1,8 @@
 extends BasicInterface
 class_name I
 
+## An simple interface
+
 signal sig_1
 signal sig_2(tring:int)
 
