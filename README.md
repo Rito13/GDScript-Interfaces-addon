@@ -116,6 +116,7 @@ func _ready() -> void:
 	print(Interfaces.implements(a,"res://object_with_id.gd")) # prints true - A implements interface defined in `object_with_id.gd`
 ```
 # Interfaces tab bottom part of editor
+![plot](./bottom_tab.png)
 Here all errors in defining, using or implementing interfaces will show up.
 On the left are listed all opened scripts with errors.
 If you select one of them then on the secound list all errors from that file will show up.
