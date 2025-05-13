@@ -1,11 +1,16 @@
-extends Node
-const IMPLEMENTS = ["I6"]
+extends A.Sub
+const IMPLEMENTS = ["I6.SubInterface"]
 
-var beta: int
-var gamma
+@export var a := 1.1
+@export var c := "Haha"
 
-func bar(a: int) -> float:
-	return 0.1
+@export_category("Test2")
+@export var e := &"Test2"
 
-func pip(arg1) -> int:
-	return arg1
+func _ready() -> void:
+	var r = A.new()
+	var script : Script = r.get_script()
+	#print("methods: ",script.get_script_method_list())
+	#print("properties: ",script.get_script_property_list())
+	#print("signals: ",script.get_script_signal_list())
+	#print("constants: ",script.get_script_constant_map())

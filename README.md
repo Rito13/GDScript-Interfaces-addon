@@ -21,6 +21,15 @@ var gamma: int    # gamma needs to be an int
 var delta:= ""    # delta needs to be an String
 var epsilon : A   # epsilon needs to be a user defined class named A
 
+const NAME_OF_THE_GAME = "Very fun game" # Interfaces can define constants
+
+enum AnEnum { # They can also define enumerations
+	VALUE_1,
+	VALUE_2,
+	VALUE_22 = 22,
+	SIZE,
+}
+
 # Require implementing class to have these methods
 # foo must have no obligatory argument but it can have optional arguments
 func foo() -> float: # foo must return a float
@@ -32,6 +41,14 @@ func bar(i:int,s=""): # bar can return something but it does not have to
 
 func f3() -> void: # f3 also can return something but interface user will not be able to get it
 	pass
+
+# Interfaces can be defined as inner classes in script
+class InnerInterface extends BasicInterface:
+	# But they can't be inner class of an inner class
+	class InnerInner extends BasicInterface:
+		var a # this is useless
+	@export var a: float # @export in interface definition does nothing
+	var b: Vector4       # so it can be omitted
 ```
 ### Interface implementation
 ```gdscript
@@ -56,6 +73,9 @@ var beta : Vector2 # or can be changed to some
 var gamma : int = NAN   # properties can have default values
 @export var delta := "" # and they can be exported
 @onready var epsilon : A = $"." # this will also work
+
+# Constants and Enumerations are defined inside interface script
+# so they shouldn't be redefined in implementing class
 
 # class can have more properties
 var custom_name = "B"
@@ -96,6 +116,9 @@ extends Node # it can be part of a scene
 var test : I # Stores Object implementing I interface
 
 func use(i:I,_c:='A'):
+	# references to constants in the interface need to prefixed with interface name
+	print("This will be printed: ",I.NAME_OF_THE_GAME)
+	print("This will throw error: ",i.NAME_OF_THE_GAME)
 	i.foo()  # can use functions defined in I
 	i.bar(randi())
 	if i is A: # can use is that way but not opposite

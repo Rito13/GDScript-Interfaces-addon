@@ -1,6 +1,7 @@
 extends Node
 
 var test     # comment
+@export var s : A.SubR
 
 func use(i  ,_b:='lol'):
 	i.foo()
@@ -13,5 +14,5 @@ func _ready() -> void:
 	add_child(a)
 	use(Interfaces.as_interface(a))
 	#test = Interfaces.an_enumeration.MINUS_TWO
-	print(Interfaces.implements(a,"I2"))
+	print(Interfaces.implements($Node2,"I6.SubInterface"))
 	print("Main  , J, K, L")

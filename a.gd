@@ -35,3 +35,13 @@ func is_i4() -> bool:
 
 func _on_go_pressed():
 	pass
+
+class Sub extends Node:
+	@export var b := Vector4.ONE
+	@export_category("Test")
+	@export var d := &"Test"
+
+class SubR extends Resource:
+	@export var b := Vector4.ONE
+	@export_category("Test")
+	@export var d := &"Test"

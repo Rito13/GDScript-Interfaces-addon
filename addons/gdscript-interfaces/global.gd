@@ -27,7 +27,7 @@ func _enter_tree() -> void:
 		var s = ResourceLoader.load(path)
 		if s is Script:
 			extra_load_interface(s)
-#	print(inherits)
+#	print(paths)
 
 static func extra_load_interface(p_script:Script) -> Error:
 	var base := p_script.get_base_script()
@@ -49,7 +49,7 @@ static func extra_load_interface(p_script:Script) -> Error:
 				return ERR_INVALID_PARAMETER
 	tmp.append(key)
 	tmp.append_array(inherits[key])
-#	print(tmp)
+#	print(p_script.resource_path," - ",tmp)
 	inherits[p_script.resource_path] = tmp
 	return OK
 

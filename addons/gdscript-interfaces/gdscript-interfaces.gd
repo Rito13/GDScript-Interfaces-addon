@@ -72,17 +72,34 @@ func _on_script_changed(p_s:Script):
 func read_script(p_s:Script):
 	if not p_s or p_s == get_script():
 		return
-	#print(p_s)
 	BOTTOM_PANEL_TAB.remove_errors_generated_by_script(p_s)
 	var inst = null
 	if not p_s.reload(true) and p_s.has_method("new"):
 		inst = p_s.new()
 	if not inst:
 		return
+	var cons = p_s.get_script_constant_map()
+	var interface_global_name = p_s.get_global_name()
+	if interface_global_name == "":
+		interface_global_name = p_s.resource_path
+	for key in cons:
+		if cons[key] is Script:
+			var script : Script = cons[key]
+			BOTTOM_PANEL_TAB.remove_errors_generated_by_script(script)
+			var script_name = p_s.resource_path + " : " + key
+			var need_update = BOTTOM_PANEL_TAB.configure_script(script,p_s,script_name)
+			var _i = inst.get(key).new()
+			var inner_class_constants = script.get_script_constant_map()
+			if _i is BasicInterface:
+				_read_internal_interface(_i,interface_global_name+"."+key)
+			elif "IMPLEMENTS" in inner_class_constants:
+				_read_implementing_class(_i,inner_class_constants["IMPLEMENTS"],script)
+			if need_update:
+				BOTTOM_PANEL_TAB.update_script_list(script)
+			if not _i is RefCounted:
+				if _i.has_method("free"):
+					_i.free()
 	if inst is BasicInterface:
-		var interface_global_name = p_s.get_global_name()
-		if interface_global_name == "":
-			interface_global_name = p_s.resource_path
 		var spec = InterfaceSpecification.new()
 		for met in p_s.get_script_method_list():
 			var n = met["name"]
@@ -91,6 +108,8 @@ func read_script(p_s:Script):
 		for sig in p_s.get_script_signal_list():
 			spec.signals.append(sig["name"])
 		for prop in p_s.get_script_property_list():
+			if prop["usage"] & PROPERTY_USAGE_CATEGORY or prop["usage"] & PROPERTY_USAGE_GROUP:
+				continue
 			if prop["name"].ends_with(".gd"):
 				continue
 			var n = prop["name"]
@@ -98,86 +117,109 @@ func read_script(p_s:Script):
 			spec.variables[n] = prop
 		interfaces[interface_global_name] = spec
 		return
-	var cons = p_s.get_script_constant_map()
 	if "IMPLEMENTS" in cons and not p_s.has_script_signal(Interfaces.NOT_IMPLEMENT):
-		var methods = {}
-		var variables = {}
-		for method in inst.get_method_list():
-			methods[method["name"]] = method
-		for prop in inst.get_property_list():
-			variables[prop["name"]] = prop
-		if cons["IMPLEMENTS"] is Array:
-			for i_name in cons["IMPLEMENTS"]:
-				if i_name is Script:
-					if i_name.get_global_name() == "":
-						i_name = i_name.resource_path
-					else:
-						i_name = i_name.get_global_name()
-				if not interfaces.has(i_name):
-					if load_interface_from_path(i_name) != OK:
-						show_error(p_s,UNKNOWN_INTERFACE % [i_name])
+		_read_implementing_class(inst,cons["IMPLEMENTS"],p_s)
+	if not inst is RefCounted:
+		if inst.has_method("free"):
+			inst.free()
+
+func _read_internal_interface(inst:BasicInterface,interface_global_name:StringName):
+	var spec = InterfaceSpecification.new()
+	for met in inst.get_method_list():
+		var n = met["name"]
+		met.erase("name")
+		spec.methods[n] = met
+	for sig in inst.get_signal_list():
+		spec.signals.append(sig["name"])
+	for prop in inst.get_property_list():
+		if prop["usage"] & PROPERTY_USAGE_CATEGORY or prop["usage"] & PROPERTY_USAGE_GROUP:
+			continue
+		if prop["name"].ends_with(".gd"):
+			continue
+		var n = prop["name"]
+		prop.erase("name")
+		spec.variables[n] = prop
+	interfaces[interface_global_name] = spec
+
+func _read_implementing_class(inst:Object,implements:Array,p_s:Script):
+	if not implements:
+		return
+	var methods = {}
+	var variables = {}
+	for method in inst.get_method_list():
+		methods[method["name"]] = method
+	for prop in inst.get_property_list():
+		variables[prop["name"]] = prop
+	for i_name in implements:
+		if i_name is Script:
+			if i_name.get_global_name() == "":
+				i_name = i_name.resource_path
+			else:
+				i_name = i_name.get_global_name()
+		if not interfaces.has(i_name):
+			if load_interface_from_path(i_name) != OK:
+				show_error(p_s,UNKNOWN_INTERFACE % [i_name])
+				continue
+		var spec = interfaces[i_name]
+		for sig in spec.signals:
+			if inst.has_signal(sig):
+				continue
+			show_error(p_s,LACK_OF_SIGNAL % [i_name,sig])
+		for key in spec.variables.keys():
+			if not variables.has(key):
+				show_error(p_s,LACK_OF_PROPERTY % [i_name,key])
+				continue
+			var type = spec.variables[key]["type"]
+			if type == TYPE_NIL:
+				continue
+			var type_string = type_string(type)
+			if type == TYPE_OBJECT:
+				type_string = spec.variables[key]["class_name"]
+				if type_string == variables[key]["class_name"]:
+					continue
+			elif type == variables[key]["type"]:
+				continue
+			show_error(p_s,INVALID_PROPERTY_TYPE % [key,i_name,type_string])
+		for key in spec.methods.keys():
+			if not methods.has(key):
+				show_error(p_s,LACK_OF_METHOD % [i_name,key])
+				continue
+			var args = methods[key]["args"]
+			var iargs = spec.methods[key]["args"]
+			if len(args) < len(iargs):
+				show_error(p_s,METHOD_NEED_MORE_ARGS % [key,i_name,len(iargs)])
+				continue
+			for i in range(len(iargs)):
+				var type = args[i]["type"]
+				var itype = iargs[i]["type"]
+				if type == TYPE_NIL:
+					continue
+				if itype == TYPE_NIL:
+					show_error(p_s,ARGUMENT_EXCESSIVE_TYPE % [args[i]["name"],key,i_name])
+					continue
+				if itype == TYPE_OBJECT:
+					if args[i]["class_name"] == iargs[i]["class_name"]:
 						continue
-				var spec = interfaces[i_name]
-				for sig in spec.signals:
-					if inst.has_signal(sig):
-						continue
-					show_error(p_s,LACK_OF_SIGNAL % [i_name,sig])
-				for key in spec.variables.keys():
-					if not variables.has(key):
-						show_error(p_s,LACK_OF_PROPERTY % [i_name,key])
-						continue
-					var type = spec.variables[key]["type"]
-					if type == TYPE_NIL:
-						continue
-					var type_string = type_string(type)
-					if type == TYPE_OBJECT:
-						type_string = spec.variables[key]["class_name"]
-						if type_string == variables[key]["class_name"]:
-							continue
-					elif type == variables[key]["type"]:
-						continue
-					show_error(p_s,INVALID_PROPERTY_TYPE % [key,i_name,type_string])
-				for key in spec.methods.keys():
-					if not methods.has(key):
-						show_error(p_s,LACK_OF_METHOD % [i_name,key])
-						continue
-					var args = methods[key]["args"]
-					var iargs = spec.methods[key]["args"]
-					if len(args) < len(iargs):
-						show_error(p_s,METHOD_NEED_MORE_ARGS % [key,i_name,len(iargs)])
-						continue
-					for i in range(len(iargs)):
-						var type = args[i]["type"]
-						var itype = iargs[i]["type"]
-						if type == TYPE_NIL:
-							continue
-						if itype == TYPE_NIL:
-							show_error(p_s,ARGUMENT_EXCESSIVE_TYPE % [args[i]["name"],key,i_name])
-							continue
-						if itype == TYPE_OBJECT:
-							if args[i]["class_name"] == iargs[i]["class_name"]:
-								continue
-							var c_type = args[i]["class_name"]
-							if c_type == "":
-								c_type = type_string(type)
-							show_error(p_s,INVALID_ARGUMENT_TYPE % [c_type,args[i]["name"],key,iargs[i]["class_name"],i_name])
-							continue
-						if itype != type:
-							show_error(p_s,INVALID_ARGUMENT_TYPE % [type_string(type),args[i]["name"],key,type_string(itype),i_name])
-					var ret = methods[key]["return"]
-					var iret = spec.methods[key]["return"]
-					if iret["type"] == TYPE_NIL:
-						continue
-					var required_type = type_string(iret["type"])
-					if iret["type"] == TYPE_OBJECT:
-						required_type = iret["class_name"]
-					if ret["type"] == TYPE_OBJECT:
-						if ret["class_name"] == required_type:
-							continue
-					elif ret["type"] == iret["type"]:
-						continue
-					show_error(p_s,INVALID_RETURN_TYPE % [i_name,key,required_type])
-#	inst.free()
+					var c_type = args[i]["class_name"]
+					if c_type == "":
+						c_type = type_string(type)
+					show_error(p_s,INVALID_ARGUMENT_TYPE % [c_type,args[i]["name"],key,iargs[i]["class_name"],i_name])
+					continue
+				if itype != type:
+					show_error(p_s,INVALID_ARGUMENT_TYPE % [type_string(type),args[i]["name"],key,type_string(itype),i_name])
+			var ret = methods[key]["return"]
+			var iret = spec.methods[key]["return"]
+			if iret["type"] == TYPE_NIL:
+				continue
+			var required_type = type_string(iret["type"])
+			if iret["type"] == TYPE_OBJECT:
+				required_type = iret["class_name"]
+			if ret["type"] == TYPE_OBJECT:
+				if ret["class_name"] == required_type:
+					continue
+			elif ret["type"] == iret["type"]:
+				continue
+			show_error(p_s,INVALID_RETURN_TYPE % [i_name,key,required_type])
 
 func _build() -> bool :
 	var SE = get_editor_interface().get_script_editor()

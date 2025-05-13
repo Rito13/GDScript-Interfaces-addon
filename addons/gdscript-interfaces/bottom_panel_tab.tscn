@@ -30,8 +30,10 @@ one_shot = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
+focus_mode = 2
 bbcode_enabled = true
 text = "Simple description of an error in script: In declaration of method [color=PINK][b]set_param1()[/b][/color] return type is not specified."
+selection_enabled = true
 
 [connection signal="item_clicked" from="Scripts" to="." method="_on_scripts_item_clicked"]
 [connection signal="item_selected" from="Scripts" to="." method="_on_scripts_item_selected"]
