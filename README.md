@@ -164,7 +164,6 @@ Used internally.
  - variable type specification as: `Array[AnInterface]`
  - using interfaces in scripts build-in scene
  - support for external editor
- - store informations about interface static typing
  - do not remove interface static typing from strings
  - readd interface static typing when script is loaded
  - show line where error occured.

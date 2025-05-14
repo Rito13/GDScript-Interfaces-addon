@@ -239,15 +239,21 @@ func build_from_path(path):
 	var file = FileAccess.open(path, FileAccess.READ)
 	var s_c = file.get_as_text()
 	file.close()
+	var to_readd := {}
 	for i_name in interfaces.keys():
 		var empty = ""
 		for _i in range(len(i_name)):
 			empty += " "
 		var regex = RegEx.create_from_string(r":(\s*)"+i_name+r"(\s*[\s,#])")
 		for m in regex.search_all(s_c):
-			print("'",m.get_string(2),"'")
+			to_readd[m.get_start()] = m.get_string(1) + i_name
 		s_c = regex.sub(s_c," $1"+empty+"$2",true)
 	file = FileAccess.open(path, FileAccess.WRITE)
+	s_c += "\n#"
+	var to_readd_keys = to_readd.keys()
+	to_readd_keys.sort()
+	for key in to_readd_keys:
+		s_c += str(key) + "-'" + to_readd[key] + "'"
 	file.store_string(s_c)
 	file.close()
 

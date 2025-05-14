@@ -59,7 +59,7 @@ static func extra_load_interface(p_script:Script,p_path:="",p_global_name:="") -
 				return ERR_INVALID_PARAMETER
 	tmp.append(key)
 	tmp.append_array(inherits[key])
-	print(p_path," - ",tmp)
+#	print(p_path," - ",tmp)
 	inherits[p_path] = tmp
 	return OK
 
