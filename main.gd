@@ -14,5 +14,5 @@ func _ready() -> void:
 	add_child(a)
 	use(Interfaces.as_interface(a))
 	#test = Interfaces.an_enumeration.MINUS_TWO
-	print(Interfaces.implements($Node2,"I6.SubInterface"))
+	print(Interfaces.implements($Node2,"BasicInterface"))
 	print("Main  , J, K, L")

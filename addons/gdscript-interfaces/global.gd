@@ -23,15 +23,25 @@ func _enter_tree() -> void:
 			tmp_inh.erase(key)
 			paths.erase(key)
 	inherits = {BI_PATH:[]}
-	for path in paths.values():
+	paths[&"BasicInterface"] = BI_PATH
+	for g_name in paths.keys():
+		var path = paths[g_name]
 		var s = ResourceLoader.load(path)
 		if s is Script:
-			extra_load_interface(s)
+			extra_load_interface(s,path,g_name)
 #	print(paths)
 
-static func extra_load_interface(p_script:Script) -> Error:
+static func extra_load_interface(p_script:Script,p_path:="",p_global_name:="") -> Error:
 	var base := p_script.get_base_script()
 	var tmp = []
+	var constants = p_script.get_script_constant_map()
+	if p_path == "":
+		p_path = p_script.resource_path
+	for constant_name in constants:
+		if constants[constant_name] is Script:
+			extra_load_interface.call(constants[constant_name],p_path+":"+constant_name)
+			if p_global_name != "":
+				paths[p_global_name+"."+constant_name] = p_path+":"+constant_name
 	if not base:
 		return ERR_INVALID_PARAMETER
 	var key = ""
@@ -49,8 +59,8 @@ static func extra_load_interface(p_script:Script) -> Error:
 				return ERR_INVALID_PARAMETER
 	tmp.append(key)
 	tmp.append_array(inherits[key])
-#	print(p_script.resource_path," - ",tmp)
-	inherits[p_script.resource_path] = tmp
+	print(p_path," - ",tmp)
+	inherits[p_path] = tmp
 	return OK
 
 static func implements(who:Object,what:StringName) -> bool:
