@@ -37,11 +37,12 @@ static func extra_load_interface(p_script:Script,p_path:="",p_global_name:="") -
 	var constants = p_script.get_script_constant_map()
 	if p_path == "":
 		p_path = p_script.resource_path
-	for constant_name in constants:
-		if constants[constant_name] is Script:
-			extra_load_interface.call(constants[constant_name],p_path+":"+constant_name)
-			if p_global_name != "":
-				paths[p_global_name+"."+constant_name] = p_path+":"+constant_name
+	if not Engine.is_editor_hint():
+		for constant_name in constants:
+			if constants[constant_name] is Script:
+				extra_load_interface.call(constants[constant_name],p_path+":"+constant_name)
+				if p_global_name != "":
+					paths[p_global_name+"."+constant_name] = p_path+":"+constant_name
 	if not base:
 		return ERR_INVALID_PARAMETER
 	var key = ""
