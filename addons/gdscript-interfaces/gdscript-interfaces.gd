@@ -7,6 +7,7 @@ const GLOBAL_NAME = "InterfacesAutoload"
 var GLOBAL : Interfaces
 var BOTTOM_PANEL_TAB : Control
 var BOTTOM_PANEL_BUTTON : Button
+var SE : ScriptEditor
 
 # Messages
 ## [Interface]
@@ -31,7 +32,7 @@ const INVALID_RETURN_TYPE = "Interface [b]%s[/b] requires [color={color}]%s()[/c
 func _enter_tree() -> void:
 	GLOBAL = Interfaces.new()
 	add_child(GLOBAL)
-	var SE = get_editor_interface().get_script_editor()
+	SE = get_editor_interface().get_script_editor()
 	SE.editor_script_changed.connect(_on_script_changed)
 	SE.script_close.connect(_on_script_close)
 	add_autoload_singleton(GLOBAL_NAME,"res://addons/gdscript-interfaces/global.gd")
@@ -72,6 +73,9 @@ func _on_script_changed(p_s:Script):
 func read_script(p_s:Script):
 	if not p_s or p_s == get_script():
 		return
+	var static_typing_info = p_s.source_code.get_slice('\n',p_s.source_code.get_slice_count('\n')-1)
+	if static_typing_info != "" and static_typing_info[0] == '#':
+		_readd_static_typing(p_s,static_typing_info)
 	BOTTOM_PANEL_TAB.remove_errors_generated_by_script(p_s)
 	var inst = null
 	if not p_s.reload(true) and p_s.has_method("new"):
@@ -122,6 +126,33 @@ func read_script(p_s:Script):
 	if not inst is RefCounted:
 		if inst.has_method("free"):
 			inst.free()
+
+func _readd_static_typing(p_script:Script,p_info:String):
+	if p_info == "":
+		return
+	p_info = p_info.erase(0,1)
+	var slices : Array = p_info.split("'")
+	for i in range(len(slices)):
+		var s = slices[i] as String
+		if s.ends_with("-"):
+			slices[i] = s.trim_suffix("-").to_int()
+	var s_c = p_script.source_code
+	for i in range(1,len(slices),2):
+		var pos = slices[i-1] as int
+		var typing = slices[i] as String
+		if not pos or not typing:
+			continue
+#		print(pos," - ",typing)
+		var search = r"\s"
+		for c in typing:
+			search += r"\s"
+		var regex = RegEx.create_from_string(search)
+#		for m in regex.search_all(p_script.source_code,pos,pos+len(typing)):
+#			print(m.get_string(0))
+		s_c = regex.sub(s_c,":"+typing,true,pos,pos+len(typing)+1)
+	p_script.source_code = s_c.trim_suffix(p_info)
+	p_script.changed.emit()
+#	print(p_script.source_code)
 
 func _read_internal_interface(inst:BasicInterface,interface_global_name:StringName):
 	var spec = InterfaceSpecification.new()
@@ -222,7 +253,6 @@ func _read_implementing_class(inst:Object,implements:Array,p_s:Script):
 			show_error(p_s,INVALID_RETURN_TYPE % [i_name,key,required_type])
 
 func _build() -> bool :
-	var SE = get_editor_interface().get_script_editor()
 	for script in SE.get_open_scripts():
 		build_script(script)
 	return true
