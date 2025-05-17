@@ -29,3 +29,4 @@ Add any other context about the problem here.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
+Visual markers like arrows and outlines are welcome, but remember to maintain readability.
