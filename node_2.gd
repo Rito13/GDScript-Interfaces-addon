@@ -14,3 +14,5 @@ func _ready() -> void:
 	#print("properties: ",script.get_script_property_list())
 	#print("signals: ",script.get_script_signal_list())
 	#print("constants: ",script.get_script_constant_map())
+
+#

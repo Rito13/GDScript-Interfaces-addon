@@ -17,3 +17,5 @@ extends RefCounted
 ## Constants are implemented in Interfaces them self,
 ## so this will not have any effect on definition of Interfaces.
 const ___DUMMY___ = "DUMMY"
+
+#

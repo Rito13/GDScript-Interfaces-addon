@@ -127,6 +127,13 @@ func read_script(p_s:Script):
 		if inst.has_method("free"):
 			inst.free()
 
+func find_code_edits(parent:Node=SE) -> Array[CodeEdit]:
+	var _to_return : Array[CodeEdit] = []
+	var _nodes = parent.find_children("*",&"CodeEdit",true,false)
+	for n in _nodes:
+		_to_return.append(n as CodeEdit)
+	return _to_return
+
 func _readd_static_typing(p_script:Script,p_info:String):
 	if p_info == "":
 		return
@@ -137,6 +144,13 @@ func _readd_static_typing(p_script:Script,p_info:String):
 		if s.ends_with("-"):
 			slices[i] = s.trim_suffix("-").to_int()
 	var s_c = p_script.source_code
+	var code_edit : CodeEdit
+	if len(slices) > 1:
+		var candidates = find_code_edits()
+		for c in candidates:
+			if c.text == s_c:
+				code_edit = c
+				break
 	for i in range(1,len(slices),2):
 		var pos = slices[i-1] as int
 		var typing = slices[i] as String
@@ -150,8 +164,9 @@ func _readd_static_typing(p_script:Script,p_info:String):
 #		for m in regex.search_all(p_script.source_code,pos,pos+len(typing)):
 #			print(m.get_string(0))
 		s_c = regex.sub(s_c,":"+typing,true,pos,pos+len(typing)+1)
-	p_script.source_code = s_c.trim_suffix(p_info)
-	p_script.changed.emit()
+	if code_edit:
+		print("Readed static typing in '",p_script.resource_path,"' successfully.")
+		code_edit.text = s_c.trim_suffix("\n#"+p_info)
 #	print(p_script.source_code)
 
 func _read_internal_interface(inst:BasicInterface,interface_global_name:StringName):
@@ -279,7 +294,10 @@ func build_from_path(path):
 			to_readd[m.get_start()] = m.get_string(1) + i_name
 		s_c = regex.sub(s_c," $1"+empty+"$2",true)
 	file = FileAccess.open(path, FileAccess.WRITE)
-	s_c += "\n#"
+	if s_c.ends_with("\n#\n"):
+		s_c = s_c.trim_suffix("\n")
+	elif not s_c.ends_with("\n#"):
+		s_c += "\n#"
 	var to_readd_keys = to_readd.keys()
 	to_readd_keys.sort()
 	for key in to_readd_keys:

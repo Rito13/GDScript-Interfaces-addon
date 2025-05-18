@@ -104,3 +104,5 @@ func _on_timer_timeout() -> void:
 			_remove_at_index(i)
 			i -= 1
 		i += 1
+
+#

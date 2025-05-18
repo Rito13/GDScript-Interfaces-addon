@@ -165,7 +165,6 @@ Used internally.
  - using interfaces in scripts build-in scene
  - support for external editor
  - do not remove interface static typing from strings
- - readd interface static typing when script is loaded
  - show line where error occured.
  - automatic conversion from interfaces to traits (traits need to be completed first)
  - move implementation erros from bottom 'Interfaces' tab to Script Editor main window (might not be possible)
