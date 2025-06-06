@@ -286,13 +286,16 @@ func build_from_path(path):
 	file.close()
 	var to_readd := {}
 	for i_name in interfaces.keys():
-		var empty = ""
-		for _i in range(len(i_name)):
-			empty += " "
-		var regex = RegEx.create_from_string(r":(\s*)"+i_name+r"(\s*[\s,#])")
-		for m in regex.search_all(s_c):
-			to_readd[m.get_start()] = m.get_string(1) + i_name
-		s_c = regex.sub(s_c," $1"+empty+"$2",true)
+		var s = r":(\s*)(Array\["+i_name+r"\]|"+i_name+r"|Dictionary\[(.+,)?"+i_name+r"(,.+)?\])(\s*[\s,#])"
+		var regex = RegEx.create_from_string(s)
+		var matches = regex.search_all(s_c)
+		for m in matches:
+			to_readd[m.get_start()] = m.get_string(1) + m.get_string(2)
+			var empty = ""
+			for _i in range(len(m.get_string(2))):
+				empty += " "
+			s_c = regex.sub(s_c," $1"+empty+"$5",false,m.get_start())
+			# 5 not 3 because nested groups also count
 	file = FileAccess.open(path, FileAccess.WRITE)
 	if s_c.ends_with("\n#\n"):
 		s_c = s_c.trim_suffix("\n")

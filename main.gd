@@ -1,16 +1,18 @@
 extends Node
 
-var test : I6 # comment
+var test      # comment
+var test_array            = []
+var test_dict #                       = {}
 @export var s : A.SubR
 
-func use(i:I,_b:='lol'):
+func use(i  ,_b:='lol'):
 	i.foo()
 	i.bar(randi())
 	if _b == "return":
 		return
 	var s = i
 
-## the argument i of type: 	I4  is ver important
+## the argument i of type  	    is ver important
 
 func _ready() -> void:
 	var a := A.new()
@@ -19,4 +21,13 @@ func _ready() -> void:
 	use(Interfaces.as_interface(a),"return")
 	#test = Interfaces.an_enumeration.MINUS_TWO
 	print(Interfaces.implements($Node2,"BasicInterface"))
-	print("Main: I, J, K, L")
+	print("Main   , J, K, L")
+	
+	print("")
+	
+	for i in [1,3,4,7]:
+		test_array.append(A.new())
+		var inter   = test_array[len(test_array)-1]
+		inter.bar(i)
+
+#23-' I6'53-' Array[I]'84-' Dictionary[String,I]'146-'I'252-' 	I4'519-' I'610-'I'

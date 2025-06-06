@@ -114,6 +114,8 @@ func is_i4() -> bool:
 extends Node # it can be part of a scene
 
 var test : I # Stores Object implementing I interface
+var test_array : Array[I] = [] # Arrays are also compatible (from version 1.0.9)
+var test_dict  : Dictionary[String,I] = {} # and so dictionaries
 
 func use(i:I,_c:='A'):
 	# references to constants in the interface need to prefixed with interface name
@@ -161,7 +163,6 @@ To do that it uses `Interfaces.implements` function.
 Used to inform Interfaces class that interface defined in p_script exists.
 Used internally.
 # TODO
- - variable type specification as: `Array[AnInterface]`
  - using interfaces in scripts build-in scene
  - support for external editor
  - do not remove interface static typing from strings
