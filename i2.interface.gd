@@ -13,5 +13,3 @@ func _on_go_pressed() -> void:
 
 func get_id() -> int:
 	return 0
-
-#

@@ -1,18 +1,18 @@
 extends Node
 
-var test      # comment
-var test_array            = []
-var test_dict #                       = {}
+var test : I6 # comment
+var test_array : Array[I] = []
+var test_dict #: Dictionary[String,I] = {}
 @export var s : A.SubR
 
-func use(i  ,_b:='lol'):
+func use(i:I,_b:='lol'):
 	i.foo()
 	i.bar(randi())
 	if _b == "return":
 		return
 	var s = i
 
-## the argument i of type  	    is ver important
+## the argument i of type: 	I4  is ver important
 
 func _ready() -> void:
 	var a := A.new()
@@ -29,7 +29,5 @@ func _ready() -> void:
 	
 	for i in [1,3,4,7]:
 		test_array.append(A.new())
-		var inter   = test_array[len(test_array)-1]
+		var inter:I = test_array[len(test_array)-1]
 		inter.bar(i)
-
-#23-' I6'53-' Array[I]'84-' Dictionary[String,I]'146-'I'252-' 	I4'687-'I'

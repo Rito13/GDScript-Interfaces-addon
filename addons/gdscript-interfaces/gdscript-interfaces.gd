@@ -8,6 +8,7 @@ var GLOBAL : Interfaces
 var BOTTOM_PANEL_TAB : Control
 var BOTTOM_PANEL_BUTTON : Button
 var SE : ScriptEditor
+var build_in_tscn_script_regex := RegEx.create_from_string(r"(res:\/\/.*\.tscn)::(GDScript.*)")
 
 # Messages
 ## [Interface]
@@ -302,10 +303,20 @@ class LineArray extends Resource:
 		return false
 
 func build_from_path(path):
-	if not path.ends_with(".gd"):
+	var file:FileAccess
+	var s_c:String
+	var tscn_match := build_in_tscn_script_regex.search(path)
+	var tscn_regex:RegEx
+	if tscn_match :
+		file = FileAccess.open(tscn_match.get_string(1), FileAccess.READ)
+		tscn_regex = RegEx.create_from_string(r'(\[sub_resource type="GDScript" id="'+tscn_match.get_string(2)+r'"\]\nscript\/source = ")(([^"]|\\")*\n)"')
+		s_c = tscn_regex.search(file.get_as_text()).get_string(2)
+	elif not path.ends_with(".gd"):
 		return
-	var file = FileAccess.open(path, FileAccess.READ)
-	var s_c = file.get_as_text()
+	else:
+		file = FileAccess.open(path, FileAccess.READ)
+		s_c = file.get_as_text()
+	var file_input_text = file.get_as_text()
 	file.close()
 	var to_readd := {}
 	var strings_locations : LineArray = LineArray.new()
@@ -320,7 +331,6 @@ func build_from_path(path):
 	for s in strings:
 		var l = Line.new(s.get_start(),s.get_end())
 		strings_locations.append(l)
-		print(l)
 	for i_name in interfaces.keys():
 		var s = r":(\s*)(Array\["+i_name+r"\]|"+i_name+r"|Dictionary\[(.+,)?"+i_name+r"(,.+)?\])(\s*[\s,#])"
 		var regex = RegEx.create_from_string(s)
@@ -334,7 +344,7 @@ func build_from_path(path):
 				empty += " "
 			s_c = regex.sub(s_c," $1"+empty+"$5",false,m.get_start())
 			# 5 not 3 because nested groups also count
-	file = FileAccess.open(path, FileAccess.WRITE)
+	
 	if s_c.ends_with("\n#\n"):
 		s_c = s_c.trim_suffix("\n")
 	elif not s_c.ends_with("\n#"):
@@ -343,7 +353,13 @@ func build_from_path(path):
 	to_readd_keys.sort()
 	for key in to_readd_keys:
 		s_c += str(key) + "-'" + to_readd[key] + "'"
-	file.store_string(s_c)
+	
+	if tscn_match :
+		file = FileAccess.open(tscn_match.get_string(1), FileAccess.WRITE)
+		file.store_string(tscn_regex.sub(file_input_text,"$1"+s_c+'"'))
+	else:
+		file = FileAccess.open(path, FileAccess.WRITE)
+		file.store_string(s_c)
 	file.close()
 
 func build_script(p_s:Script):

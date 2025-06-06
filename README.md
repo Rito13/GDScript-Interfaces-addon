@@ -163,7 +163,7 @@ To do that it uses `Interfaces.implements` function.
 Used to inform Interfaces class that interface defined in p_script exists.
 Used internally.
 # TODO
- - using interfaces in scripts build-in scene
+ - support binary format of scenes for built-in scripts
  - support for external editor
  - show line where error occured.
  - automatic conversion from interfaces to traits (traits need to be completed first)

@@ -14,5 +14,3 @@ class SubInterface extends BasicInterface:
 	const c = 33
 	var d : SubSub
 	var e : Node
-
-#

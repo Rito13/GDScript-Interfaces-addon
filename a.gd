@@ -45,5 +45,3 @@ class SubR extends Resource:
 	@export var b := Vector4.ONE
 	@export_category("Test")
 	@export var d := &"Test"
-
-#

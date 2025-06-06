@@ -96,5 +96,3 @@ static func as_interface(who:Object,interface:StringName=&"") -> Object:
 
 static func say(what:String) -> void:
 	print_rich("Global is not able to say "+what+" himself.")
-
-#

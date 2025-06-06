@@ -5,14 +5,18 @@
 
 [sub_resource type="GDScript" id="GDScript_hsnl1"]
 script/source = "extends Node
-var n:I4 # Test of buildin script
+var n   # Test of buildin script
 
 func foo() -> Vector2:
 	return Vector2(1,2)
 
 func bar(a:String,b:NodePath):
 	pass
-"
+
+func _ready() -> void:
+	n = Interfaces.as_interface(A.new(),\"I\")
+
+#18-'I'"
 
 [sub_resource type="GDScript" id="GDScript_ijysv"]
 script/source = "extends Node
