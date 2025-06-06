@@ -278,6 +278,29 @@ func _on_script_close(p_s:Script):
 	var path = p_s.resource_path
 	build_from_path.call_deferred(path)
 
+class Line extends Resource:
+	var start:int
+	var end:int
+	
+	func _init(_start:int,_end:int) -> void:
+		start = _start
+		end = _end
+	
+	func contains(i:int) -> bool:
+		return i>start and i<end
+
+class LineArray extends Resource:
+	var elems : Array[Line] = []
+	
+	func append(_element:Line):
+		elems.append(_element)
+	
+	func contains(i:int) -> bool:
+		for line in elems:
+			if line.contains(i):
+				return true
+		return false
+
 func build_from_path(path):
 	if not path.ends_with(".gd"):
 		return
@@ -285,11 +308,26 @@ func build_from_path(path):
 	var s_c = file.get_as_text()
 	file.close()
 	var to_readd := {}
+	var strings_locations : LineArray = LineArray.new()
+	var strings_regex = RegEx.create_from_string("" +
+			"\"\"\"(.|\\n)*\"\"\"" + "|" + # case 1
+			"\"\"" + "|" +                 # case 2
+			"\"([^\"]|\\\\\")*[^\\\\]\"" + # case 3
+			"|" + "'''(.|\\n)*'''" + "|" + # case 4
+			"''" + "|" +                   # case 5
+			"'([^']|\\\\')*[^\\\\]'" )     # case 6
+	var strings = strings_regex.search_all(s_c)
+	for s in strings:
+		var l = Line.new(s.get_start(),s.get_end())
+		strings_locations.append(l)
+		print(l)
 	for i_name in interfaces.keys():
 		var s = r":(\s*)(Array\["+i_name+r"\]|"+i_name+r"|Dictionary\[(.+,)?"+i_name+r"(,.+)?\])(\s*[\s,#])"
 		var regex = RegEx.create_from_string(s)
 		var matches = regex.search_all(s_c)
 		for m in matches:
+			if strings_locations.contains(m.get_start()):
+				continue
 			to_readd[m.get_start()] = m.get_string(1) + m.get_string(2)
 			var empty = ""
 			for _i in range(len(m.get_string(2))):

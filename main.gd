@@ -21,13 +21,15 @@ func _ready() -> void:
 	use(Interfaces.as_interface(a),"return")
 	#test = Interfaces.an_enumeration.MINUS_TWO
 	print(Interfaces.implements($Node2,"BasicInterface"))
-	print("Main   , J, K, L")
+	print("Main: I, J, K, L")
 	
 	print("")
+	var __s := "\"Year 1984\" is an book"
+	var __s2 = '"Diuna" is too'
 	
 	for i in [1,3,4,7]:
 		test_array.append(A.new())
 		var inter   = test_array[len(test_array)-1]
 		inter.bar(i)
 
-#23-' I6'53-' Array[I]'84-' Dictionary[String,I]'146-'I'252-' 	I4'519-' I'610-'I'
+#23-' I6'53-' Array[I]'84-' Dictionary[String,I]'146-'I'252-' 	I4'678-'I'
