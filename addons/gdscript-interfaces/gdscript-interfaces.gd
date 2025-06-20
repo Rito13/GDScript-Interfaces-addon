@@ -75,6 +75,9 @@ func read_script(p_s:Script):
 	if not p_s or p_s == get_script():
 		return
 	var static_typing_info = p_s.source_code.get_slice('\n',p_s.source_code.get_slice_count('\n')-1)
+	if static_typing_info == "":
+		static_typing_info = p_s.source_code.get_slice('\n',p_s.source_code.get_slice_count('\n')-2)
+		static_typing_info+="\n"
 	if static_typing_info != "" and static_typing_info[0] == '#':
 		_readd_static_typing(p_s,static_typing_info)
 	BOTTOM_PANEL_TAB.remove_errors_generated_by_script(p_s)
@@ -146,12 +149,11 @@ func _readd_static_typing(p_script:Script,p_info:String):
 			slices[i] = s.trim_suffix("-").to_int()
 	var s_c = p_script.source_code
 	var code_edit : CodeEdit
-	if len(slices) > 1:
-		var candidates = find_code_edits()
-		for c in candidates:
-			if c.text == s_c:
-				code_edit = c
-				break
+	var candidates = find_code_edits()
+	for c in candidates:
+		if c.text == s_c:
+			code_edit = c
+			break
 	for i in range(1,len(slices),2):
 		var pos = slices[i-1] as int
 		var typing = slices[i] as String
@@ -271,6 +273,7 @@ func _read_implementing_class(inst:Object,implements:Array,p_s:Script):
 func _build() -> bool :
 	for script in SE.get_open_scripts():
 		build_script(script)
+	get_editor_interface().save_scene()
 	return true
 
 func _on_script_close(p_s:Script):
@@ -318,6 +321,16 @@ func build_from_path(path):
 		s_c = file.get_as_text()
 	var file_input_text = file.get_as_text()
 	file.close()
+	var code_edit : CodeEdit
+	var candidates = find_code_edits()
+	for c in candidates:
+		if c.text == s_c:
+			code_edit = c
+			break
+	if not code_edit:
+		print("Error could not find demanded code edit node.")
+		print("Building script from path \""+path+"\" failed.")
+		return
 	var to_readd := {}
 	var strings_locations : LineArray = LineArray.new()
 	var strings_regex = RegEx.create_from_string("" +
@@ -354,13 +367,14 @@ func build_from_path(path):
 	for key in to_readd_keys:
 		s_c += str(key) + "-'" + to_readd[key] + "'"
 	
-	if tscn_match :
-		file = FileAccess.open(tscn_match.get_string(1), FileAccess.WRITE)
-		file.store_string(tscn_regex.sub(file_input_text,"$1"+s_c+'"'))
-	else:
-		file = FileAccess.open(path, FileAccess.WRITE)
-		file.store_string(s_c)
-	file.close()
+	#if tscn_match :
+		#file = FileAccess.open(tscn_match.get_string(1), FileAccess.WRITE)
+		#file.store_string(tscn_regex.sub(file_input_text,"$1"+s_c+'"'))
+	#else:
+		#file = FileAccess.open(path, FileAccess.WRITE)
+		#file.store_string(s_c)
+	#file.close()
+	code_edit.text = s_c
 
 func build_script(p_s:Script):
 	if not p_s or p_s == get_script():
