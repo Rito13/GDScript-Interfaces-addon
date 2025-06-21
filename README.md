@@ -163,8 +163,10 @@ To do that it uses `Interfaces.implements` function.
 Used to inform Interfaces class that interface defined in p_script exists.
 Used internally.
 # TODO
+ - support _init functions with custom arguments
  - support binary format of scenes for built-in scripts
- - support for external editor
+ - inspector support for export variables typed as interface
  - show line where error occured.
+ - support for external editor (will need rework of core features)
  - automatic conversion from interfaces to traits (traits need to be completed first)
  - move implementation erros from bottom 'Interfaces' tab to Script Editor main window (might not be possible)
