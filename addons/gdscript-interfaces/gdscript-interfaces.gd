@@ -276,11 +276,16 @@ func _build() -> bool :
 	get_editor_interface().save_scene()
 	return true
 
+func build_script(p_s:Script):
+	if not p_s or p_s == get_script():
+		return
+	build_from_path(p_s.resource_path)
+
 func _on_script_close(p_s:Script):
 	if not p_s or p_s == get_script():
 		return
 	var path = p_s.resource_path
-	build_from_path.call_deferred(path)
+	build_from_path.call_deferred(path,true)
 
 class Line extends Resource:
 	var start:int
@@ -305,7 +310,7 @@ class LineArray extends Resource:
 				return true
 		return false
 
-func build_from_path(path):
+func build_from_path(path, use_old_save_method = false):
 	var file:FileAccess
 	var s_c:String
 	var tscn_match := build_in_tscn_script_regex.search(path)
@@ -322,15 +327,16 @@ func build_from_path(path):
 	var file_input_text = file.get_as_text()
 	file.close()
 	var code_edit : CodeEdit
-	var candidates = find_code_edits()
-	for c in candidates:
-		if c.text == s_c:
-			code_edit = c
-			break
-	if not code_edit:
-		print("Error could not find demanded code edit node.")
-		print("Building script from path \""+path+"\" failed.")
-		return
+	if not use_old_save_method:
+		var candidates = find_code_edits()
+		for c in candidates:
+			if c.text == s_c:
+				code_edit = c
+				break
+		if not code_edit:
+			printerr("Error: could not find corresponding CodeEdit node.")
+			printerr("       Will try to build \""+path+"\" script using FileAccess.")
+			use_old_save_method = true
 	var to_readd := {}
 	var strings_locations : LineArray = LineArray.new()
 	var strings_regex = RegEx.create_from_string("" +
@@ -367,19 +373,17 @@ func build_from_path(path):
 	for key in to_readd_keys:
 		s_c += str(key) + "-'" + to_readd[key] + "'"
 	
-	#if tscn_match :
-		#file = FileAccess.open(tscn_match.get_string(1), FileAccess.WRITE)
-		#file.store_string(tscn_regex.sub(file_input_text,"$1"+s_c+'"'))
-	#else:
-		#file = FileAccess.open(path, FileAccess.WRITE)
-		#file.store_string(s_c)
-	#file.close()
-	code_edit.text = s_c
-
-func build_script(p_s:Script):
-	if not p_s or p_s == get_script():
+	if not use_old_save_method:
+		code_edit.text = s_c
 		return
-	build_from_path(p_s.resource_path)
+	
+	if tscn_match :
+		file = FileAccess.open(tscn_match.get_string(1), FileAccess.WRITE)
+		file.store_string(tscn_regex.sub(file_input_text,"$1"+s_c+'"'))
+	else:
+		file = FileAccess.open(path, FileAccess.WRITE)
+		file.store_string(s_c)
+	file.close()
 
 func show_error(p_script:Script,p_message:String):
 	var ES = get_editor_interface().get_editor_settings()
