@@ -169,4 +169,4 @@ Used internally.
  - show line where error occured.
  - support for external editor (will need rework of core features)
  - automatic conversion from interfaces to traits (traits need to be completed first)
- - move implementation erros from bottom 'Interfaces' tab to Script Editor main window (might not be possible)
+ - move implementation errors from bottom 'Interfaces' tab to Script Editor main window (might not be possible)
