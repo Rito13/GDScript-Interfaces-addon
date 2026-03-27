@@ -144,7 +144,7 @@ func _ready() -> void:
 ![plot](./bottom_tab.png)
 Here all errors in defining, using or implementing interfaces will show up.
 On the left are listed all opened scripts with errors.
-If you select one of them then on the secound list all errors from that file will show up.
+If you select one of them then on the second list all errors from that file will show up.
 Selecting an error displays it message on the right.
 Double click of an error will carry you to where it occurs.
 # Interfaces class
